@@ -78,7 +78,7 @@ public class GameOverActivity extends Activity {
     }
 
     public void backToLevel() {
-        Intent intent = new Intent(getApplicationContext(), SelectLevelActivity.class);
+        Intent intent = new Intent(getApplicationContext(), MainMenuActivity.class);
         startActivity(intent);
     }
 

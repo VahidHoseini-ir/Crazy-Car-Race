@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.zargidi.camera.OrthoCamera;
 import com.zargidi.ccar.MainGame;
 import com.zargidi.entity.EntityManager;
@@ -23,29 +24,33 @@ public class GameScreen extends Screen {
     Texture backgroundImg2;
 
     public static int speed;
+    private float slowSpeed;
+    private float normalSpeed;
+    private float fastSpeed;
+    private float elapsedTime;
+
+    private static final float NORMAL_DELAY = 12f;
+    private static final float FAST_DELAY = 28f;
+    private static final float TRANSITION_DURATION = 6f;
     int moveY = 0;
 
 
     @Override
     public void create() {
-        // set game speed
+        // set game speed progression
         int sh = Gdx.graphics.getHeight();
-        if(MainGame.level == 1 && MainGame.debug){
-            speed = sh / 200;
+        if (MainGame.debug) {
+            slowSpeed = sh / 200f;
+            normalSpeed = sh / 120f;
+            fastSpeed = sh / 80f;
+        } else {
+            slowSpeed = sh / 100f;
+            normalSpeed = sh / 80f;
+            fastSpeed = sh / 60f;
         }
-        else if(MainGame.level == 2 && MainGame.debug){
-            speed = sh / 80;
-        }
-        else if(MainGame.level == 3 && MainGame.debug){
-            speed = sh / 30;
-        }
-        else if(MainGame.level == 1){
-            speed = sh / 100;
-        }else if(MainGame.level == 2){
-            speed = sh / 80;
-        }else if(MainGame.level == 3){
-            speed = sh / 60;
-        }
+
+        speed = Math.max(1, Math.round(slowSpeed));
+        elapsedTime = 0f;
 
         //set user score
         MainGame.scoreCurrent = 0;
@@ -65,8 +70,29 @@ public class GameScreen extends Screen {
     @Override
     public void update() {
         camera.update();
+        updateSpeedProgression();
         entityManager.update();
 
+    }
+
+    private void updateSpeedProgression() {
+        elapsedTime += Gdx.graphics.getDeltaTime();
+
+        float targetSpeed = slowSpeed;
+
+        if (elapsedTime > FAST_DELAY) {
+            float progress = Math.min((elapsedTime - FAST_DELAY) / TRANSITION_DURATION, 1f);
+            targetSpeed = MathUtils.lerp(normalSpeed, fastSpeed, progress);
+        } else if (elapsedTime > NORMAL_DELAY) {
+            float progress = Math.min((elapsedTime - NORMAL_DELAY) / TRANSITION_DURATION, 1f);
+            targetSpeed = MathUtils.lerp(slowSpeed, normalSpeed, progress);
+        }
+
+        int updatedSpeed = Math.max(1, Math.round(targetSpeed));
+        if (updatedSpeed != speed) {
+            speed = updatedSpeed;
+            entityManager.onSpeedChanged(speed);
+        }
     }
 
     @Override

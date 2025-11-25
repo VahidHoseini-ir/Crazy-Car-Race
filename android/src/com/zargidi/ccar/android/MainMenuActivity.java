@@ -50,7 +50,7 @@ public class MainMenuActivity extends Activity {
         int id = v.getId();
 
         if (id == R.id.buttonPlay) {
-            selectLevelActivity();
+            launchGame();
         }
         else if (id == R.id.buttonGameCenter) {
             howToPlay();
@@ -66,9 +66,11 @@ public class MainMenuActivity extends Activity {
         }
     }
 
-    private void selectLevelActivity() {
+    private void launchGame() {
 
-        Intent intent = new Intent(getApplicationContext(), SelectLevelActivity.class);
+        GameLauncherActivity.devMode = devMode;
+        GameLauncherActivity.level = 1;
+        Intent intent = new Intent(getApplicationContext(), GameLauncherActivity.class);
         startActivity(intent);
     }
 

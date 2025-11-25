@@ -94,6 +94,14 @@ public class EntityManager {
 
     }
 
+    public void onSpeedChanged(int newSpeed) {
+        speed = newSpeed;
+
+        for (Entity entity : treesAndGolds) {
+            entity.direction.y = -newSpeed;
+        }
+    }
+
 
     public void render(SpriteBatch sb) {
 
