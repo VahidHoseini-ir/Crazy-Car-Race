@@ -80,23 +80,27 @@ public class GameOverActivity extends Activity {
     public void backToLevel() {
         Intent intent = new Intent(getApplicationContext(), MainMenuActivity.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_down);
     }
 
     public void replayGame() {
         Intent intent = new Intent(getApplicationContext(), GameLauncherActivity.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_down);
     }
 
     public void playMarketStar() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("https://play.google.com/store/apps/developer?id=Zargidi%20Games"));
         startActivity(intent);
+        overridePendingTransition(R.anim.fade_in_soft, R.anim.fade_out_soft);
     }
 
     public void playMarketHeart() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.zargidi.ccar.android"));
         startActivity(intent);
+        overridePendingTransition(R.anim.fade_in_soft, R.anim.fade_out_soft);
     }
 
 }
