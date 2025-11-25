@@ -20,19 +20,18 @@ public class CarOne extends Car {
     public void update() {
 
         pos.add(direction);
+        float delta = Gdx.graphics.getDeltaTime();
 
         if (Gdx.input.justTouched()) {
 
             int touchXCoordinant = Gdx.input.getX();
 
             if (touchXCoordinant < Gdx.graphics.getWidth() / 2) {
-                if (lane == "L") {
-
-                    this.pos = new Vector2((3 * Gdx.graphics.getWidth() / 8) - (carWidth / 2), 20);
+                if ("L".equals(lane)) {
+                    targetX = (3 * Gdx.graphics.getWidth() / 8f) - (carWidth / 2f);
                     lane = "R";
-
                 } else {
-                    this.pos = new Vector2((1 * Gdx.graphics.getWidth() / 8) - (carWidth / 2), 20);
+                    targetX = (1 * Gdx.graphics.getWidth() / 8f) - (carWidth / 2f);
                     lane = "L";
                 }
 
@@ -41,8 +40,9 @@ public class CarOne extends Car {
         } else {
             setDirection(0, 0);
         }
-        this.smokeEffect.setPosition(this.pos.x + carWidth / 2, this.pos.y + carHeight / 10);
-        this.smokeEffect.update(Gdx.graphics.getDeltaTime());
+        moveTowardsLane(delta);
+        this.smokeEffect.setPosition(this.pos.x + carWidth / 2f, this.pos.y + carHeight / 10f);
+        this.smokeEffect.update(delta);
 
     }
 

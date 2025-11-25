@@ -31,8 +31,9 @@ public class EntityManager {
     private FileHandle goldEffectSound;
 
     private boolean gameOver = false;
-
-    private static int gameTimer = 0;
+    private float spawnTimer = 0f;
+    private float baseSpawnInterval = 1.35f;
+    private float minSpawnInterval = 0.55f;
 
     private int c1x = 100;
     private int c2x = 330;
@@ -65,7 +66,9 @@ public class EntityManager {
 
         treesAndGolds = new Array<Entity>();
 
-        scoreBoard = new ScoreBoard(new Vector2(screenWidth - (TextureManager.SCOREBOARD.getWidth() / 5 * 3), Gdx.graphics.getHeight() - (TextureManager.SCOREBOARD.getHeight() / 5 * 3)), new Vector2(0, 0));
+        float scoreBoardX = (screenWidth - TextureManager.SCOREBOARD.getWidth()) / 2f;
+        float scoreBoardY = Gdx.graphics.getHeight() - (TextureManager.SCOREBOARD.getHeight()) - (Gdx.graphics.getHeight() / 30f);
+        scoreBoard = new ScoreBoard(new Vector2(scoreBoardX, scoreBoardY), new Vector2(0, 0));
 
         //Gold effects
         goldEffectFile = Gdx.files.internal("effects/get_golds_1.p");
@@ -97,12 +100,11 @@ public class EntityManager {
 
     public void render(SpriteBatch sb) {
 
-        gameTimer += 1;
-        //if (gameTimer * 100 / GameScreen.speed > 400) {
-        if (gameTimer + Math.sqrt(Math.sqrt(Double.valueOf(2 * MainGame.scoreCurrent))) > 600 / GameScreen.speed) {
+        spawnTimer += Gdx.graphics.getDeltaTime();
+        if (spawnTimer >= calculateSpawnInterval()) {
             removeUnUsedEntities();
             createGoldsAndTrees();
-            gameTimer = 0;
+            spawnTimer = 0f;
         }
 
         carOne.render(sb);
@@ -121,75 +123,96 @@ public class EntityManager {
 
     public void createGoldsAndTrees() {
 
-        int lane = MathUtils.random(1, 7);
+        int lane = MathUtils.random(1, getMaxLanePattern());
 
-        Vector2 lane1V = new Vector2((1 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane2V = new Vector2((3 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane3V = new Vector2((5 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane4V = new Vector2((7 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
+        float difficultyBonus = Math.min(screenHeight / 10f, MainGame.scoreCurrent * screenHeight / 600f);
+        float minOffset = (screenHeight / 6f) + difficultyBonus / 2f;
+        float maxOffset = (screenHeight / 3f) + difficultyBonus;
+
+        float fallSpeed = getCurrentFallSpeed();
+
+        Vector2 lane1V = new Vector2((1 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(minOffset, maxOffset));
+        Vector2 lane2V = new Vector2((3 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(minOffset, maxOffset));
+        Vector2 lane3V = new Vector2((5 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(minOffset, maxOffset));
+        Vector2 lane4V = new Vector2((7 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(minOffset, maxOffset));
 
 
         if (lane == 1) {
-            //if(MathUtils.randomBoolean())
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 2) {
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 3) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 4) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 5) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 6) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 7) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 8 || lane == 9) {
-            treesAndGolds.add(new TreeTwo(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeTwo(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeOne(lane4V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 10 || lane == 11) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 12 || lane == 13) {
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -fallSpeed)));
 
         } else if (lane == 14 || lane == 15) {
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeTwo(lane2V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new TreeOne(lane3V, new Vector2(0, -fallSpeed)));
+            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -fallSpeed)));
 
         }
 
+    }
+
+    private float calculateSpawnInterval() {
+        float difficulty = MathUtils.clamp(MainGame.scoreCurrent / 25f, 0f, 10f);
+        float interval = baseSpawnInterval - (difficulty * 0.08f);
+        return MathUtils.clamp(interval, minSpawnInterval, baseSpawnInterval);
+    }
+
+    private int getMaxLanePattern() {
+        int patternBoost = MathUtils.clamp(MainGame.scoreCurrent / 10, 0, 8);
+        return MathUtils.clamp(4 + patternBoost, 5, 15);
+    }
+
+    private float getCurrentFallSpeed() {
+        float boost = MathUtils.clamp(MainGame.scoreCurrent * 0.15f, 0f, speed * 0.8f);
+        return speed + boost;
     }
 
     private void checkCollisions() {

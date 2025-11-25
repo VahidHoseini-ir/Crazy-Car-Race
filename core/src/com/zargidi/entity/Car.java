@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.zargidi.ccar.MainGame;
 import com.zargidi.ccar.TextureManager;
@@ -18,12 +19,16 @@ public abstract  class Car extends Entity {
     protected int carWidth;
     protected int carHeight;
     protected ParticleEffect smokeEffect;
+    protected float targetX;
+    protected float laneChangeSmoothing = 8.0f;
 
     public Car(String name, String lane, Texture texture, Vector2 pos, Vector2 direction) {
 
         super(texture, pos, direction);
 
         this.eType = 1;
+        this.lane = lane;
+        this.targetX = pos.x;
 
         if(name.equals("CAR1")){
             carWidth = TextureManager.CAR1.getWidth();
@@ -46,5 +51,14 @@ public abstract  class Car extends Entity {
     public void render(SpriteBatch sb){
         smokeEffect.draw(sb);
         sb.draw(texture, this.pos.x, this.pos.y);
+    }
+
+    protected void moveTowardsLane(float delta){
+        float lerpValue = MathUtils.clamp(delta * laneChangeSmoothing, 0f, 1f);
+        pos.x = MathUtils.lerp(pos.x, targetX, lerpValue);
+
+        if (Math.abs(pos.x - targetX) < 1.0f) {
+            pos.x = targetX;
+        }
     }
 }

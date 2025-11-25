@@ -26,6 +26,7 @@ public class MainGame extends ApplicationAdapter {
 
     public static boolean debug = false;
     public static int level = 1;
+    private boolean gameOverHandled = false;
 
     public interface MyGameCallback {
         public void showGameOverScreen(Integer scoreCurrent, Integer scoreHigh, Boolean gameWin);
@@ -37,12 +38,17 @@ public class MainGame extends ApplicationAdapter {
         level = selectedLevel;
     }
 
-	@Override
-	public void create () {
+        @Override
+        public void create () {
 
-		batch = new SpriteBatch();
+                gameOverHandled = false;
+                gameOver = false;
+                gameWin = false;
+                scoreCurrent = 0;
+
+                batch = new SpriteBatch();
         ScreenManager.setCurrentScreen(new GameScreen());
-	}
+        }
 
     @Override
     public void dispose() {
@@ -57,19 +63,25 @@ public class MainGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 
+        if(gameOver){
+            if(!gameOverHandled){
+                gameOverHandled = true;
+                if(myGameCallback != null){
+                    myGameCallback.showGameOverScreen(scoreCurrent, scoreHigh, gameWin);
+                }
+            }
+            if(ScreenManager.getCurrentScreen() != null){
+                ScreenManager.getCurrentScreen().render(batch);
+            }
+            return;
+        }
+
         if(ScreenManager.getCurrentScreen() != null){
             ScreenManager.getCurrentScreen().update();
         }
         if(ScreenManager.getCurrentScreen() != null){
             ScreenManager.getCurrentScreen().render(batch);
 
-        }
-
-        if(gameOver){
-            ScreenManager.clearScreen();
-            dispose();
-            Gdx.app.exit();
-            myGameCallback.showGameOverScreen(scoreCurrent, scoreHigh, gameWin);
         }
 
 	}
