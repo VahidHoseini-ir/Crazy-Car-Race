@@ -10,87 +10,94 @@ import com.zargidi.camera.OrthoCamera;
 import com.zargidi.ccar.MainGame;
 import com.zargidi.entity.EntityManager;
 
-/**
- * Created by ilimturan on 18/01/15.
- */
 public class GameScreen extends Screen {
 
     private OrthoCamera camera;
     private EntityManager entityManager;
 
+    private Pixmap px;
+    private Texture backgroundImg1;
+    private Texture backgroundImg2;
 
-    Pixmap px;
-    Texture backgroundImg1;
-    Texture backgroundImg2;
-
+    // سرعتی که بقیه جاها هم استفاده می‌کنن
     public static int speed;
-    private float slowSpeed;
-    private float normalSpeed;
-    private float fastSpeed;
-    private float elapsedTime;
 
-    private static final float NORMAL_DELAY = 12f;
-    private static final float FAST_DELAY = 28f;
-    private static final float TRANSITION_DURATION = 6f;
-    int moveY = 0;
+    // سرعت‌های پایه
+    private float slowSpeed;   // سرعت آسان (ابتدای بازی)
+    private float fastSpeed;   // حداکثر سرعت (وقتی بازی خیلی سخت می‌شود)
 
+    private int moveY = 0;
+
+    // تنظیمات سخت شدن بر اساس امتیاز
+    private static final int SPEED_START_SCORE = 40;   // تا این امتیاز سرعت ثابت
+    private static final int MAX_DIFFICULTY_SCORE = 200; // بعد از این امتیاز به حداکثر سرعت می‌رسیم
 
     @Override
     public void create() {
-        // set game speed progression
+
+        // می‌تونیم سرعت را نسبی بر اساس ارتفاع صفحه تنظیم کنیم
         int sh = Gdx.graphics.getHeight();
-        if (MainGame.debug) {
-            slowSpeed = sh / 200f;
-            normalSpeed = sh / 120f;
-            fastSpeed = sh / 80f;
-        } else {
-            slowSpeed = sh / 100f;
-            normalSpeed = sh / 80f;
-            fastSpeed = sh / 60f;
-        }
 
+        // این‌ها را اگر بازی خیلی کند/تیز بود، فقط همین تقسیم‌ها را عوض کن
+        slowSpeed = sh / 550F;   // سرعت راحت
+        fastSpeed = sh / 80f;    // سرعت سخت
+
+        // سرعت اولیه
         speed = Math.max(1, Math.round(slowSpeed));
-        elapsedTime = 0f;
 
-        //set user score
+        // امتیازها
         MainGame.scoreCurrent = 0;
-        if (MainGame.scoreHigh == null) MainGame.scoreHigh = 0;
+        if (MainGame.scoreHigh == null) {
+            MainGame.scoreHigh = 0;
+        }
 
         camera = new OrthoCamera();
         entityManager = new EntityManager();
 
-        //For background img
+        // لود بک‌گراند
         px = new Pixmap(Gdx.files.internal("background.png"));
         backgroundImg1 = new Texture(px);
         backgroundImg1.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
         backgroundImg2 = backgroundImg1;
-
     }
 
     @Override
     public void update() {
         camera.update();
-        updateSpeedProgression();
+        updateSpeedByScore();  // ⬅️ اینجا بر اساس امتیاز سخت می‌کنیم
         entityManager.update();
-
     }
 
-    private void updateSpeedProgression() {
-        elapsedTime += Gdx.graphics.getDeltaTime();
+    /**
+     * سرعت بازی بر اساس امتیاز زیاد می‌شود.
+     * ۰ تا ۴۰ → سرعت = slowSpeed
+     * ۴۰ تا ۲۰۰ → به‌تدریج از slowSpeed به fastSpeed
+     * بالاتر از ۲۰۰ → سرعت = fastSpeed
+     */
+    private void updateSpeedByScore() {
+        int score = MainGame.scoreCurrent;
 
-        float targetSpeed = slowSpeed;
+        float t; // بین 0 و 1 برای LERP
 
-        if (elapsedTime > FAST_DELAY) {
-            float progress = Math.min((elapsedTime - FAST_DELAY) / TRANSITION_DURATION, 1f);
-            targetSpeed = MathUtils.lerp(normalSpeed, fastSpeed, progress);
-        } else if (elapsedTime > NORMAL_DELAY) {
-            float progress = Math.min((elapsedTime - NORMAL_DELAY) / TRANSITION_DURATION, 1f);
-            targetSpeed = MathUtils.lerp(slowSpeed, normalSpeed, progress);
+        if (score <= SPEED_START_SCORE) {
+            // هنوز زوده برای سخت شدن → سرعت آسان ثابت
+            t = 0f;
+        } else {
+            // از ۴۰ به بعد شروع کن کم‌کم سخت‌تر کردن
+            float effectiveScore = score - SPEED_START_SCORE;
+            float range = MAX_DIFFICULTY_SCORE - SPEED_START_SCORE; // 200 - 40 = 160
+
+            t = effectiveScore / range; // نرمال‌سازی بین 0 و 1
+            if (t > 1f) t = 1f;         // بیشتر از 1 نشود
         }
+
+        // سرعت هدف بین slowSpeed و fastSpeed
+        float targetSpeed = MathUtils.lerp(slowSpeed, fastSpeed, t);
 
         int updatedSpeed = Math.max(1, Math.round(targetSpeed));
         if (updatedSpeed != speed) {
             speed = updatedSpeed;
+            // اگر موجودات بازی به سرعت وابسته‌اند
             entityManager.onSpeedChanged(speed);
         }
     }
@@ -99,43 +106,39 @@ public class GameScreen extends Screen {
     public void render(SpriteBatch sb) {
         sb.setProjectionMatrix(camera.combined);
 
-        moveY = moveY + speed;
+        // حرکت بک‌گراند بر اساس speed
+        moveY += speed;
 
         sb.begin();
         int backW = Gdx.graphics.getWidth();
         int backH = Gdx.graphics.getHeight();
-        sb.draw(backgroundImg1, 0, 0 - moveY, backW, backH);
+
+        sb.draw(backgroundImg1, 0, -moveY, backW, backH);
         sb.draw(backgroundImg2, 0, backH - moveY, backW, backH);
         sb.end();
 
-        if (moveY >= backH) moveY = 0;
+        // وقتی کامل یک صفحه بالا رفت، ریست کن
+        if (moveY >= backH) {
+            moveY = 0;
+        }
+
         sb.begin();
         entityManager.render(sb);
         sb.end();
-
-
     }
 
     @Override
     public void resize(int width, int height) {
-
         camera.resize();
     }
 
     @Override
     public void dispose() {
-        //System.out.println("dispose");
+        if (backgroundImg1 != null) backgroundImg1.dispose();
+        if (px != null) px.dispose();
         Gdx.app.exit();
-
     }
 
-    @Override
-    public void pause() {
-        //System.out.println("pause");
-    }
-
-    @Override
-    public void resume() {
-        //System.out.println("resume");
-    }
+    @Override public void pause() {}
+    @Override public void resume() {}
 }
