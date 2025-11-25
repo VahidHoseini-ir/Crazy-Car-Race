@@ -29,7 +29,7 @@ public class GameScreen extends Screen {
     private int moveY = 0;
 
     // تنظیمات سخت شدن بر اساس امتیاز
-    private static final int SPEED_START_SCORE = 40;   // تا این امتیاز سرعت ثابت
+    private static final int SPEED_START_SCORE = 10;   // تا این امتیاز سرعت ثابت
     private static final int MAX_DIFFICULTY_SCORE = 200; // بعد از این امتیاز به حداکثر سرعت می‌رسیم
 
     @Override
@@ -39,8 +39,8 @@ public class GameScreen extends Screen {
         int sh = Gdx.graphics.getHeight();
 
         // این‌ها را اگر بازی خیلی کند/تیز بود، فقط همین تقسیم‌ها را عوض کن
-        slowSpeed = sh / 550F;   // سرعت راحت
-        fastSpeed = sh / 80f;    // سرعت سخت
+        slowSpeed = sh / 150f;   // سرعت راحت
+        fastSpeed = sh / 30f;    // سرعت سخت
 
         // سرعت اولیه
         speed = Math.max(1, Math.round(slowSpeed));

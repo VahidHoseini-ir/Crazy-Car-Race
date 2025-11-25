@@ -65,7 +65,7 @@ public class ScoreBoard extends Entity {
         float scoreY = pos.y + paddingY + scoreLayout.height;
 
         labelFont.draw(sb, "SCORE", centerX - labelLayout.width / 2f, labelY);
-        userScoreTable.draw(sb, userScoreCurrent, centerX - scoreLayout.width / 2f, scoreY);
+        userScoreTable.draw(sb, userScoreCurrent, centerX - scoreLayout.width , scoreY);
 
     }
 
@@ -96,7 +96,9 @@ public class ScoreBoard extends Entity {
         texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
         pixmap.dispose();
 
-        pos.x = (Gdx.graphics.getWidth() - width) / 2f;
+        float marginLeft = 24f;
+
+        pos.x = marginLeft;
         pos.y = Gdx.graphics.getHeight() - height - 24f;
 
         lastScreenWidth = Gdx.graphics.getWidth();
