@@ -24,11 +24,13 @@ public class EntityManager {
     private Array<Entity> treesAndGolds;
 
     private static class SpawnPattern {
-        final int[] treeLanes;
+        final int leftTreeLane;
+        final int rightTreeLane;
         final int[] coinLanes;
 
-        SpawnPattern(int[] treeLanes, int[] coinLanes) {
-            this.treeLanes = treeLanes;
+        SpawnPattern(int leftTreeLane, int rightTreeLane, int[] coinLanes) {
+            this.leftTreeLane = leftTreeLane;
+            this.rightTreeLane = rightTreeLane;
             this.coinLanes = coinLanes;
         }
     }
@@ -61,8 +63,8 @@ public class EntityManager {
     private static int entityHeight;
     private static int entityWidthHalf;
 
-    private static final float MAX_SPAWN_INTERVAL = 1.3f;
-    private static final float MIN_SPAWN_INTERVAL = 0.55f;
+    private static final float MAX_SPAWN_INTERVAL = 1.6f;
+    private static final float MIN_SPAWN_INTERVAL = 0.9f;
 
     public EntityManager() {
         /**
@@ -143,7 +145,7 @@ public class EntityManager {
 
     private float getPatternSpacing() {
         // Keep early spacing generous, tighten slowly as speed and score rise.
-        return MathUtils.lerp(screenHeight * 0.32f, screenHeight * 0.2f, getDifficultyFactor());
+        return MathUtils.lerp(screenHeight * 0.45f, screenHeight * 0.28f, getDifficultyFactor());
     }
 
     private float getCurrentSpawnInterval() {
@@ -179,15 +181,8 @@ public class EntityManager {
 
         SpawnPattern pattern = getNextPattern();
 
-        for (int laneIndex : pattern.treeLanes) {
-            Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
-            if (useTreeOneNext) {
-                treesAndGolds.add(new TreeOne(spawnPos, new Vector2(0, -speed)));
-            } else {
-                treesAndGolds.add(new TreeTwo(spawnPos, new Vector2(0, -speed)));
-            }
-            useTreeOneNext = !useTreeOneNext;
-        }
+        addTreeToLane(lanePositions, pattern.leftTreeLane);
+        addTreeToLane(lanePositions, pattern.rightTreeLane);
 
         for (int laneIndex : pattern.coinLanes) {
             Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
@@ -195,6 +190,20 @@ public class EntityManager {
             treesAndGolds.add(new CoinGold(spawnPos, new Vector2(0, -speed)));
         }
 
+    }
+
+    private void addTreeToLane(Array<Vector2> lanePositions, int laneIndex) {
+        if (laneIndex < 0 || laneIndex >= lanePositions.size) {
+            return;
+        }
+
+        Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
+        if (useTreeOneNext) {
+            treesAndGolds.add(new TreeOne(spawnPos, new Vector2(0, -speed)));
+        } else {
+            treesAndGolds.add(new TreeTwo(spawnPos, new Vector2(0, -speed)));
+        }
+        useTreeOneNext = !useTreeOneNext;
     }
 
     private void checkCollisions() {
@@ -251,39 +260,40 @@ public class EntityManager {
     }
 
     private void setupSpawnPatterns() {
-        // Stage 0: intro, single obstacles with safe coin options
+        // Stage 0: soft start, one tree per road and plenty of coins
         Array<SpawnPattern> stage0 = new Array<SpawnPattern>();
-        stage0.add(new SpawnPattern(new int[]{1}, new int[]{0, 3}));
-        stage0.add(new SpawnPattern(new int[]{2}, new int[]{0, 1}));
-        stage0.add(new SpawnPattern(new int[]{0}, new int[]{2, 3}));
+        stage0.add(new SpawnPattern(0, 2, new int[]{1, 3}));
+        stage0.add(new SpawnPattern(1, 3, new int[]{0, 2}));
+        stage0.add(new SpawnPattern(0, 3, new int[]{1, 2}));
+        stage0.add(new SpawnPattern(1, 2, new int[]{0, 3}));
 
-        // Stage 1 (50+): introduce paired trees but keep plenty of breathing room
+        // Stage 1 (50+): alternate lanes evenly while easing coin help
         Array<SpawnPattern> stage1 = new Array<SpawnPattern>();
-        stage1.add(new SpawnPattern(new int[]{1}, new int[]{0, 2}));
-        stage1.add(new SpawnPattern(new int[]{0, 3}, new int[]{1}));
-        stage1.add(new SpawnPattern(new int[]{2}, new int[]{0, 1, 3}));
-        stage1.add(new SpawnPattern(new int[]{1, 2}, new int[]{0}));
+        stage1.add(new SpawnPattern(0, 2, new int[]{1}));
+        stage1.add(new SpawnPattern(1, 3, new int[]{2}));
+        stage1.add(new SpawnPattern(0, 3, new int[]{1}));
+        stage1.add(new SpawnPattern(1, 2, new int[]{0}));
 
-        // Stage 2 (100+): mostly two trees, occasional third lane blocked lightly
+        // Stage 2 (100+): tighten spacing by reducing coins but keep one safe lane per road
         Array<SpawnPattern> stage2 = new Array<SpawnPattern>();
-        stage2.add(new SpawnPattern(new int[]{0, 2}, new int[]{1, 3}));
-        stage2.add(new SpawnPattern(new int[]{1, 3}, new int[]{0, 2}));
-        stage2.add(new SpawnPattern(new int[]{0, 2, 3}, new int[]{1}));
-        stage2.add(new SpawnPattern(new int[]{1, 2}, new int[]{0, 3}));
+        stage2.add(new SpawnPattern(0, 2, new int[]{}));
+        stage2.add(new SpawnPattern(1, 3, new int[]{}));
+        stage2.add(new SpawnPattern(0, 3, new int[]{2}));
+        stage2.add(new SpawnPattern(1, 2, new int[]{1}));
 
-        // Stage 3 (150+): up to three trees but still one lane plus coins as relief
+        // Stage 3 (150+): occasional staggered relief coins with consistent lane rotation
         Array<SpawnPattern> stage3 = new Array<SpawnPattern>();
-        stage3.add(new SpawnPattern(new int[]{0, 1, 3}, new int[]{2}));
-        stage3.add(new SpawnPattern(new int[]{0, 2, 3}, new int[]{1}));
-        stage3.add(new SpawnPattern(new int[]{1, 2}, new int[]{0, 3}));
-        stage3.add(new SpawnPattern(new int[]{0, 2}, new int[]{1, 3}));
+        stage3.add(new SpawnPattern(0, 2, new int[]{3}));
+        stage3.add(new SpawnPattern(1, 3, new int[]{0}));
+        stage3.add(new SpawnPattern(0, 3, new int[]{}));
+        stage3.add(new SpawnPattern(1, 2, new int[]{}));
 
-        // Stage 4+ (200+): gentle bump in density; cap growth to avoid spikes
+        // Stage 4+ (200+): maintain fairness but allow back-to-back obstacles via spawn rate
         Array<SpawnPattern> stage4 = new Array<SpawnPattern>();
-        stage4.add(new SpawnPattern(new int[]{0, 1, 2}, new int[]{3}));
-        stage4.add(new SpawnPattern(new int[]{1, 2, 3}, new int[]{0}));
-        stage4.add(new SpawnPattern(new int[]{0, 2, 3}, new int[]{1}));
-        stage4.add(new SpawnPattern(new int[]{0, 1, 3}, new int[]{2}));
+        stage4.add(new SpawnPattern(0, 2, new int[]{}));
+        stage4.add(new SpawnPattern(1, 3, new int[]{}));
+        stage4.add(new SpawnPattern(0, 3, new int[]{}));
+        stage4.add(new SpawnPattern(1, 2, new int[]{}));
 
         stagedPatterns.add(stage0);
         stagedPatterns.add(stage1);
