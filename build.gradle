@@ -1,0 +1,9 @@
+plugins {
+    id 'com.android.application' version '8.6.1' apply false
+    id 'java-library'
+}
+
+ext {
+    appName = 'ccar'
+    gdxVersion = '1.12.1'
+}
