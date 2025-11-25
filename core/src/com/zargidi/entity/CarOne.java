@@ -21,6 +21,9 @@ public class CarOne extends Car {
 
         pos.add(direction);
 
+        float leftLaneX = (1 * Gdx.graphics.getWidth() / 8f) - (carWidth / 2f);
+        float rightLaneX = (3 * Gdx.graphics.getWidth() / 8f) - (carWidth / 2f);
+
         if (Gdx.input.justTouched()) {
 
             int touchXCoordinant = Gdx.input.getX();
@@ -28,11 +31,11 @@ public class CarOne extends Car {
             if (touchXCoordinant < Gdx.graphics.getWidth() / 2) {
                 if (lane == "L") {
 
-                    this.pos = new Vector2((3 * Gdx.graphics.getWidth() / 8) - (carWidth / 2), 20);
+                    targetX = rightLaneX;
                     lane = "R";
 
                 } else {
-                    this.pos = new Vector2((1 * Gdx.graphics.getWidth() / 8) - (carWidth / 2), 20);
+                    targetX = leftLaneX;
                     lane = "L";
                 }
 
@@ -41,6 +44,8 @@ public class CarOne extends Car {
         } else {
             setDirection(0, 0);
         }
+
+        smoothMoveToTarget(Gdx.graphics.getDeltaTime());
         this.smokeEffect.setPosition(this.pos.x + carWidth / 2, this.pos.y + carHeight / 10);
         this.smokeEffect.update(Gdx.graphics.getDeltaTime());
 

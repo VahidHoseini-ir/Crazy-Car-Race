@@ -32,7 +32,7 @@ public class EntityManager {
 
     private boolean gameOver = false;
 
-    private static int gameTimer = 0;
+    private float spawnTimerSeconds = 0f;
 
     private int c1x = 100;
     private int c2x = 330;
@@ -45,6 +45,9 @@ public class EntityManager {
     private static int screenWidth;
     private static int entityHeight;
     private static int entityWidthHalf;
+
+    private static final float MAX_SPAWN_INTERVAL = 1.3f;
+    private static final float MIN_SPAWN_INTERVAL = 0.55f;
 
     public EntityManager() {
         /**
@@ -65,7 +68,7 @@ public class EntityManager {
 
         treesAndGolds = new Array<Entity>();
 
-        scoreBoard = new ScoreBoard(new Vector2(screenWidth - (TextureManager.SCOREBOARD.getWidth() / 5 * 3), Gdx.graphics.getHeight() - (TextureManager.SCOREBOARD.getHeight() / 5 * 3)), new Vector2(0, 0));
+        scoreBoard = new ScoreBoard(new Vector2(screenWidth / 2f, screenHeight), new Vector2(0, 0));
 
         //Gold effects
         goldEffectFile = Gdx.files.internal("effects/get_golds_1.p");
@@ -81,6 +84,16 @@ public class EntityManager {
 
     public void update() {
 
+        float delta = Gdx.graphics.getDeltaTime();
+
+        spawnTimerSeconds += delta;
+        removeUnUsedEntities();
+
+        if (spawnTimerSeconds >= getCurrentSpawnInterval()) {
+            createGoldsAndTrees();
+            spawnTimerSeconds = 0f;
+        }
+
         carOne.update();
         carTwo.update();
 
@@ -88,7 +101,7 @@ public class EntityManager {
             e.update();
         }
 
-        goldEffect.update(Gdx.graphics.getDeltaTime());
+        goldEffect.update(delta);
         scoreBoard.update();
 
 
@@ -103,15 +116,16 @@ public class EntityManager {
     }
 
 
-    public void render(SpriteBatch sb) {
+    private float getDifficultyFactor() {
+        return MathUtils.clamp(MainGame.scoreCurrent / 200f, 0f, 1f);
+    }
 
-        gameTimer += 1;
-        //if (gameTimer * 100 / GameScreen.speed > 400) {
-        if (gameTimer + Math.sqrt(Math.sqrt(Double.valueOf(2 * MainGame.scoreCurrent))) > 600 / GameScreen.speed) {
-            removeUnUsedEntities();
-            createGoldsAndTrees();
-            gameTimer = 0;
-        }
+    private float getCurrentSpawnInterval() {
+        return MathUtils.lerp(MAX_SPAWN_INTERVAL, MIN_SPAWN_INTERVAL, getDifficultyFactor());
+    }
+
+
+    public void render(SpriteBatch sb) {
 
         carOne.render(sb);
         carTwo.render(sb);
@@ -129,73 +143,47 @@ public class EntityManager {
 
     public void createGoldsAndTrees() {
 
-        int lane = MathUtils.random(1, 7);
+        float difficulty = getDifficultyFactor();
+        float spreadMin = MathUtils.lerp(screenHeight * 0.25f, screenHeight * 0.08f, difficulty);
+        float spreadMax = MathUtils.lerp(screenHeight * 0.35f, screenHeight * 0.18f, difficulty);
+        float spawnY = screenHeight + MathUtils.random(spreadMin, spreadMax);
 
-        Vector2 lane1V = new Vector2((1 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane2V = new Vector2((3 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane3V = new Vector2((5 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane4V = new Vector2((7 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
+        Array<Vector2> lanePositions = new Array<Vector2>();
+        lanePositions.add(new Vector2((1 * screenWidth / 8f) - entityWidthHalf, spawnY));
+        lanePositions.add(new Vector2((3 * screenWidth / 8f) - entityWidthHalf, spawnY));
+        lanePositions.add(new Vector2((5 * screenWidth / 8f) - entityWidthHalf, spawnY));
+        lanePositions.add(new Vector2((7 * screenWidth / 8f) - entityWidthHalf, spawnY));
 
+        Array<Integer> laneOrder = new Array<Integer>(new Integer[]{0, 1, 2, 3});
+        laneOrder.shuffle();
 
-        if (lane == 1) {
-            //if(MathUtils.randomBoolean())
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
+        int treesToSpawn = MathUtils.clamp(1 + MathUtils.round(difficulty * 2.2f), 1, 3);
+        int coinsToSpawn = MathUtils.clamp(1 + MathUtils.round(1 + difficulty * 2f), 1, 3);
 
-        } else if (lane == 2) {
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+        Array<Integer> occupiedLanes = new Array<Integer>();
 
-        } else if (lane == 3) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
+        for (int i = 0; i < treesToSpawn && i < laneOrder.size; i++) {
+            int laneIndex = laneOrder.get(i);
+            Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
+            if ((i + laneIndex) % 2 == 0) {
+                treesAndGolds.add(new TreeOne(spawnPos, new Vector2(0, -speed)));
+            } else {
+                treesAndGolds.add(new TreeTwo(spawnPos, new Vector2(0, -speed)));
+            }
+            occupiedLanes.add(laneIndex);
+        }
 
-        } else if (lane == 4) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+        Array<Integer> coinLanes = new Array<Integer>(laneOrder);
+        for (Integer occupiedLane : occupiedLanes) {
+            coinLanes.removeValue(occupiedLane, false);
+        }
+        coinLanes.shuffle();
 
-        } else if (lane == 5) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-
-        } else if (lane == 6) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 7) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 8 || lane == 9) {
-            treesAndGolds.add(new TreeTwo(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 10 || lane == 11) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 12 || lane == 13) {
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 14 || lane == 15) {
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
-
+        for (int i = 0; i < coinsToSpawn && i < coinLanes.size; i++) {
+            int laneIndex = coinLanes.get(i);
+            Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
+            spawnPos.y += entityHeight * 0.6f;
+            treesAndGolds.add(new CoinGold(spawnPos, new Vector2(0, -speed)));
         }
 
     }
