@@ -39,8 +39,8 @@ public class GameScreen extends Screen {
         int sh = Gdx.graphics.getHeight();
 
         // این‌ها را اگر بازی خیلی کند/تیز بود، فقط همین تقسیم‌ها را عوض کن
-        slowSpeed = sh / 150f;   // سرعت راحت
-        fastSpeed = sh / 30f;    // سرعت سخت
+        slowSpeed = sh / 200f;   // سرعت راحت
+        fastSpeed = sh / 60f;    // سرعت سخت
 
         // سرعت اولیه
         speed = Math.max(1, Math.round(slowSpeed));
@@ -106,26 +106,27 @@ public class GameScreen extends Screen {
     public void render(SpriteBatch sb) {
         sb.setProjectionMatrix(camera.combined);
 
-        // حرکت بک‌گراند بر اساس speed
-        moveY += speed;
-
-        sb.begin();
         int backW = Gdx.graphics.getWidth();
         int backH = Gdx.graphics.getHeight();
 
+        // حرکت بک‌گراند مثل قبل، بر اساس سرعت (بدون deltaTime)
+        moveY += speed;
+
+        // ✅ قبل از رسم، wrap کنیم تا همیشه 0 <= moveY < backH
+        if (moveY >= backH) {
+            moveY = moveY % backH;   // یا moveY -= backH;
+        }
+
+        sb.begin();
         sb.draw(backgroundImg1, 0, -moveY, backW, backH);
         sb.draw(backgroundImg2, 0, backH - moveY, backW, backH);
         sb.end();
-
-        // وقتی کامل یک صفحه بالا رفت، ریست کن
-        if (moveY >= backH) {
-            moveY = 0;
-        }
 
         sb.begin();
         entityManager.render(sb);
         sb.end();
     }
+
 
     @Override
     public void resize(int width, int height) {
