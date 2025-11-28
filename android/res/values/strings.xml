@@ -3,9 +3,9 @@
 
     <string name="app_name">Crazy Car Race</string>
     <string name="title_activity_splash_screen">Splash Screen</string>
-    <string name="main_menu_title">Twin Road Riders</string>
-    <string name="copy_right">2025 VSION PRO Games</string>
-    <string name="game_over_title">TRY AGAIN</string>
+    <string name="main_menu_title">CRAZY CAR RACE</string>
+    <string name="copy_right">2015 ZARGIDI GAMES</string>
+    <string name="game_over_title">GAME OVER</string>
     <string name="score_current_title">SCORE</string>
     <string name="score_high_title">BEST SCORE</string>
     <string name="hello_world">Hello world!</string>

@@ -52,7 +52,6 @@
         android:layout_weight="0.4"
         android:gravity="center|center_vertical|center_horizontal"
         android:text="@string/score_current_title"
-        android:textStyle="bold"
         android:textColor="#FFFFFF"
         android:textSize="22dp" />
 
@@ -61,8 +60,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="0.2"
-        android:textStyle="bold"
-
         android:gravity="center|center_vertical|center_horizontal"
         android:text="0"
         android:textColor="#FFFFFF"
@@ -87,8 +84,6 @@
         android:gravity="center|center_vertical|center_horizontal"
         android:text="@string/score_high_title"
         android:textColor="#FFFFFF"
-        android:textStyle="bold"
-
         android:textSize="22dp" />
 
       <TextView
@@ -98,8 +93,6 @@
         android:layout_weight="0.2"
         android:gravity="center|center_vertical|center_horizontal"
         android:text="0"
-        android:textStyle="bold"
-
         android:textColor="#FFFFFF"
         android:textSize="22dp" />
 
