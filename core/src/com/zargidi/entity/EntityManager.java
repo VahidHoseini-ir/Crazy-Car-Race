@@ -66,6 +66,10 @@ public class EntityManager {
 
         // امتیاز بالای تصویر
         scoreBoard = new ScoreBoard(new Vector2(screenWidth / 2f, screenHeight), new Vector2(0, 0));
+        scoreBoard.update();
+
+
+
 
         // صدای جمع کردن آیتم (اگر فعلاً نمی‌خوای، می‌تونی play رو کامنت کنی)
         collectSoundFile = Gdx.files.internal("sounds/coin_gold_sound.wav");
