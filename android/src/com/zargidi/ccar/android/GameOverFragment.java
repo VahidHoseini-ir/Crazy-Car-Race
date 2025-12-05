@@ -1,5 +1,6 @@
 package com.zargidi.ccar.android;
 
+import android.app.Fragment;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,11 +11,6 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.activity.OnBackPressedCallback;
-import androidx.fragment.app.Fragment;
 
 public class GameOverFragment extends Fragment {
 
@@ -29,30 +25,20 @@ public class GameOverFragment extends Fragment {
     private static final String KEY_SCORE_CURRENT = "scoreCurrent";
     private static final String KEY_SCORE_HIGH = "scoreHigh";
 
-    private final OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
-        @Override
-        public void handleOnBackPressed() {
-            backToLevel();
-        }
-    };
-
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        requireActivity().getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.activity_game_over, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        SharedPreferences userScores = requireContext().getSharedPreferences(PREF_SCORE, 0);
+        if (getActivity() == null) {
+            return;
+        }
+
+        SharedPreferences userScores = getActivity().getSharedPreferences(PREF_SCORE, 0);
         boolean gameWin = userScores.getBoolean(KEY_GAME_WIN, false);
         int scoreCurrent = userScores.getInt(KEY_SCORE_CURRENT, 0);
         int scoreHigh = userScores.getInt(KEY_SCORE_HIGH, 0);
@@ -69,7 +55,7 @@ public class GameOverFragment extends Fragment {
         txtScoreHigh.setText(String.valueOf(scoreHigh));
 
         ImageView replayButton = view.findViewById(R.id.buttonReplay);
-        Animation shakeAnim = AnimationUtils.loadAnimation(requireContext(), R.anim.shake);
+        Animation shakeAnim = AnimationUtils.loadAnimation(getActivity(), R.anim.shake);
         replayButton.clearAnimation();
         replayButton.setAnimation(shakeAnim);
 

@@ -30,7 +30,11 @@ public class GameFragment extends AndroidFragmentApplication {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        requireActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if (getActivity() == null) {
+            return null;
+        }
+
+        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
         boolean devMode = getArguments() != null && getArguments().getBoolean(ARG_DEV_MODE, false);
