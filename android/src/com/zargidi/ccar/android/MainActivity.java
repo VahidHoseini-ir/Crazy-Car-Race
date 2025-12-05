@@ -5,14 +5,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 
 import com.zargidi.ccar.MainGame;
 
-public class MainActivity extends FragmentActivity implements NavigationHost, MainMenuFragment.MenuActions, GameOverFragment.GameOverActions, MainGame.MyGameCallback {
+public class MainActivity extends Activity implements NavigationHost, MainMenuFragment.MenuActions, GameOverFragment.GameOverActions, MainGame.MyGameCallback {
 
     private static final String PREF_SCORE = "userScore";
     private static final String KEY_GAME_WIN = "gameWin";
@@ -31,7 +31,7 @@ public class MainActivity extends FragmentActivity implements NavigationHost, Ma
 
     @Override
     public void showMainMenu() {
-        getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        getFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         replaceFragment(new MainMenuFragment(), false);
     }
 
@@ -82,14 +82,14 @@ public class MainActivity extends FragmentActivity implements NavigationHost, Ma
 
             editor.apply();
 
-            getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            getFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             replaceFragment(new GameOverFragment(), false);
             overridePendingTransition(R.anim.slide_in_up, R.anim.fade_out_soft);
         });
     }
 
     private void replaceFragment(Fragment fragment, boolean addToBackStack) {
-        FragmentManager manager = getSupportFragmentManager();
+        FragmentManager manager = getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction()
                 .setCustomAnimations(R.anim.slide_in_up, R.anim.fade_out_soft, R.anim.slide_in_up, R.anim.fade_out_soft)
                 .replace(R.id.fragment_container, fragment);
@@ -103,13 +103,13 @@ public class MainActivity extends FragmentActivity implements NavigationHost, Ma
 
     @Override
     public void onBackPressed() {
-        Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        Fragment current = getFragmentManager().findFragmentById(R.id.fragment_container);
         if (current instanceof GameOverFragment) {
             onBackToMenuRequested();
             return;
         }
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-            getSupportFragmentManager().popBackStack();
+        if (getFragmentManager().getBackStackEntryCount() > 0) {
+            getFragmentManager().popBackStack();
         } else {
             super.onBackPressed();
         }

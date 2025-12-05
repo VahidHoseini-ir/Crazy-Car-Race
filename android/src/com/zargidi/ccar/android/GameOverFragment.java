@@ -11,8 +11,8 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import android.app.Fragment;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 
 public class GameOverFragment extends Fragment {
 
