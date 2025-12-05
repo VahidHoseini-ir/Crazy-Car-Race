@@ -1,15 +1,16 @@
 package com.zargidi.ccar.android;
 
-import android.app.Fragment;
+import androidx.annotation.Nullable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+
+import androidx.fragment.app.Fragment;
 
 public class MainMenuFragment extends Fragment {
 
