@@ -1,6 +1,5 @@
 package com.zargidi.ccar.android;
 
-import android.app.Fragment;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,6 +10,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 public class MainMenuFragment extends Fragment {
 
