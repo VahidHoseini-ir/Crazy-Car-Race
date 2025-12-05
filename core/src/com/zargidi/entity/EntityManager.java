@@ -3,254 +3,314 @@ package com.zargidi.entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.zargidi.ccar.MainGame;
 import com.zargidi.ccar.TextureManager;
 import com.zargidi.screen.GameScreen;
 
-
-/**
- * Created by ilimturan on 18/01/15.
- */
 public class EntityManager {
 
     private CarOne carOne;
     private CarTwo carTwo;
     private ScoreBoard scoreBoard;
-    private Array<Entity> treesAndGolds;
 
-    private Sound coinGoldSound;
+    // فقط TreeOne / TreeTwo به‌عنوان آیتم امتیازی
+    private Array<Entity> items;
 
-    private ParticleEffect goldEffect;
-    private FileHandle goldEffectFile;
-    private FileHandle goldEffectImg;
-    private FileHandle goldEffectSound;
+    private Sound collectSound;
+    private FileHandle collectSoundFile;
 
     private boolean gameOver = false;
 
-    private static int gameTimer = 0;
+    private float spawnTimerSeconds = 0f;
 
     private int c1x = 100;
     private int c2x = 330;
 
-    /**
-     * for create entities
-     */
+    // برای ایجاد موجودیت‌ها
     private static int speed;
     private static int screenHeight;
     private static int screenWidth;
-    private static int entityHeight;
-    private static int entityWidthHalf;
+
+    // برای محاسبات فاصله عمودی و حذف
+    private static int baseItemHeight;
+
+    // فاصله‌ی زمانی بین موج‌ها (هر موج = ۱ یا ۲ آیتم)
+    private static final float MAX_SPAWN_INTERVAL = 1.1f;  // اوایل بازی
+    private static final float MIN_SPAWN_INTERVAL = 0.45f; // اواخر بازی
+
+    // تنظیم hitbox (هرچه کمتر → برخورد سخت‌تر / دقیق‌تر)
+    private static final float HITBOX_SCALE_X = 0.55f; // ۵۵٪ عرض اصلی
+    private static final float HITBOX_SCALE_Y = 0.55f; // ۵۵٪ ارتفاع اصلی
 
     public EntityManager() {
-        /**
-         * for create entities
-         */
         speed = GameScreen.speed;
         screenHeight = Gdx.graphics.getHeight();
         screenWidth = Gdx.graphics.getWidth();
-        entityHeight = TextureManager.COINGOLD.getHeight();
-        entityWidthHalf = TextureManager.COINGOLD.getWidth() / 2;
 
+        // برای فاصله‌ها از ارتفاع tree1 استفاده می‌کنیم
+        baseItemHeight = TextureManager.TREE1.getHeight();
 
+        // جای اولیهٔ ماشین‌ها
         c1x = (1 * (screenWidth / 8)) - (TextureManager.CAR1.getWidth() / 2);
         c2x = (5 * (screenWidth / 8)) - (TextureManager.CAR2.getWidth() / 2);
 
         carOne = new CarOne(new Vector2(c1x, 20), new Vector2(0, 0));
         carTwo = new CarTwo(new Vector2(c2x, 20), new Vector2(0, 0));
 
-        treesAndGolds = new Array<Entity>();
+        items = new Array<Entity>();
 
-        scoreBoard = new ScoreBoard(new Vector2(screenWidth - (TextureManager.SCOREBOARD.getWidth() / 5 * 3), Gdx.graphics.getHeight() - (TextureManager.SCOREBOARD.getHeight() / 5 * 3)), new Vector2(0, 0));
-
-        //Gold effects
-        goldEffectFile = Gdx.files.internal("effects/get_golds_1.p");
-        goldEffectImg = Gdx.files.internal("effect_img");
-        goldEffect = new ParticleEffect();
-        goldEffect.load(goldEffectFile, goldEffectImg);
-        // Gold sound
-        goldEffectSound = Gdx.files.internal("sounds/coin_gold_sound.mp3");
-        coinGoldSound = Gdx.audio.newSound(goldEffectSound);
+        // امتیاز بالای تصویر
+        scoreBoard = new ScoreBoard(new Vector2(screenWidth / 2f, screenHeight), new Vector2(0, 0));
+        scoreBoard.update();
 
 
+
+
+        // صدای جمع کردن آیتم (اگر فعلاً نمی‌خوای، می‌تونی play رو کامنت کنی)
+        collectSoundFile = Gdx.files.internal("sounds/coin_gold_sound.wav");
+        collectSound = Gdx.audio.newSound(collectSoundFile);
+
+        // warm-up برای جلوگیری از لگ اولین پخش
+        collectSound.play(0f);
+        collectSound.stop();
     }
 
     public void update() {
+        float delta = Gdx.graphics.getDeltaTime();
+
+        spawnTimerSeconds += delta;
+
+        // هر چند ثانیه یک موج جدید آیتم
+        if (spawnTimerSeconds >= getCurrentSpawnInterval()) {
+            createItemWave();
+            spawnTimerSeconds = 0f;
+        }
 
         carOne.update();
         carTwo.update();
 
-        for (Entity e : treesAndGolds) {
+        for (Entity e : items) {
             e.update();
         }
 
-        goldEffect.update(Gdx.graphics.getDeltaTime());
+        // منطق گرفتن / از دست دادن آیتم‌ها
+        checkItemLogic();
+
         scoreBoard.update();
 
-
+        // پاک‌سازی آیتم‌های خیلی پایین (احتیاط)
+        removeUnUsedEntities();
     }
 
+    /** وقتی سرعت از GameScreen عوض شد، جهت حرکت آیتم‌ها هم باید تندتر شود */
     public void onSpeedChanged(int newSpeed) {
         speed = newSpeed;
 
-        for (Entity entity : treesAndGolds) {
+        for (Entity entity : items) {
             entity.direction.y = -newSpeed;
         }
     }
 
+    /**
+     * سختی بر اساس امتیاز:
+     *  - تا ۱۰: ۰ (خیلی راحت)
+     *  - از ۱۰ تا حدود ۲۰۰: به تدریج  → ۱
+     *  - بالاتر از ۲۰۰: ۱
+     */
+    private float getDifficultyFactor() {
+        if (MainGame.scoreCurrent <= 10) {
+            return 0f;
+        }
+        float t = (MainGame.scoreCurrent - 10f) / 190f;
+        return MathUtils.clamp(t, 0f, 1f);
+    }
+
+    /** فاصلهٔ عمودی بین موج‌ها (هرچه سخت‌تر → موج‌ها نزدیک‌تر) */
+    private float getPatternSpacing() {
+        float maxSpacing = screenHeight * 0.75f;  // اوایل: خلوت
+        float minSpacing = screenHeight * 0.35f;  // اواخر: شلوغ‌تر
+        return MathUtils.lerp(maxSpacing, minSpacing, getDifficultyFactor());
+    }
+
+    /** فاصله‌ی زمانی بین موج‌ها (با کمی تصادفی بودن برای غیرقابل پیش‌بینی شدن) */
+    private float getCurrentSpawnInterval() {
+        float diff = getDifficultyFactor();
+        float base = MathUtils.lerp(MAX_SPAWN_INTERVAL, MIN_SPAWN_INTERVAL, diff);
+
+        // ضرب در یک فاکتور رندوم ۰.۸ تا ۱.۲ → ریتم موج‌ها یکنواخت نیست
+        float randomFactor = MathUtils.random(0.8f, 1.2f);
+        return base * randomFactor;
+    }
 
     public void render(SpriteBatch sb) {
-
-        gameTimer += 1;
-        //if (gameTimer * 100 / GameScreen.speed > 400) {
-        if (gameTimer + Math.sqrt(Math.sqrt(Double.valueOf(2 * MainGame.scoreCurrent))) > 600 / GameScreen.speed) {
-            removeUnUsedEntities();
-            createGoldsAndTrees();
-            gameTimer = 0;
-        }
-
         carOne.render(sb);
         carTwo.render(sb);
-        goldEffect.draw(sb);
 
-        for (Entity e : treesAndGolds) {
+        for (Entity e : items) {
             e.render(sb);
         }
 
-        checkCollisions();
         scoreBoard.render(sb);
-
     }
 
+    /**
+     * یک موج آیتم می‌سازیم:
+     * - ۴ لاین داریم (۰ و ۱ سمت چپ، ۲ و ۳ سمت راست)
+     * - سمت چپ فقط TreeOne می‌آید
+     * - سمت راست فقط TreeTwo می‌آید
+     * - بسته به سختی: گاهی فقط چپ، گاهی فقط راست، گاهی هر دو
+     * - ارتفاع‌ها کمی رندوم تا طبیعی‌تر شود
+     */
+    private void createItemWave() {
 
-    public void createGoldsAndTrees() {
+        float baseY = screenHeight + getPatternSpacing();
 
-        int lane = MathUtils.random(1, 7);
+        // ۴ لاین
+        Array<Vector2> lanePositions = new Array<Vector2>();
+        int halfTreeWidth = TextureManager.TREE1.getWidth() / 2;
 
-        Vector2 lane1V = new Vector2((1 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane2V = new Vector2((3 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane3V = new Vector2((5 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
-        Vector2 lane4V = new Vector2((7 * screenWidth / 8) - entityWidthHalf, screenHeight + MathUtils.random(screenHeight / 100, screenHeight / 4));
+        lanePositions.add(new Vector2((1 * screenWidth / 8f) - halfTreeWidth, baseY)); // lane 0
+        lanePositions.add(new Vector2((3 * screenWidth / 8f) - halfTreeWidth, baseY)); // lane 1
+        lanePositions.add(new Vector2((5 * screenWidth / 8f) - halfTreeWidth, baseY)); // lane 2
+        lanePositions.add(new Vector2((7 * screenWidth / 8f) - halfTreeWidth, baseY)); // lane 3
 
+        float diff = getDifficultyFactor();
 
-        if (lane == 1) {
-            //if(MathUtils.randomBoolean())
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
+        // احتمال این‌که در یک موج، "هم چپ، هم راست" آیتم داشته باشیم
+        float bothProb = MathUtils.lerp(0.10f, 0.6f, diff);
+        float r = MathUtils.random();
 
-        } else if (lane == 2) {
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
+        boolean spawnLeft = false;
+        boolean spawnRight = false;
 
-        } else if (lane == 3) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
-
-        } else if (lane == 4) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 5) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-
-        } else if (lane == 6) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 7) {
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 8 || lane == 9) {
-            treesAndGolds.add(new TreeTwo(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 10 || lane == 11) {
-            treesAndGolds.add(new TreeOne(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 12 || lane == 13) {
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
-
-        } else if (lane == 14 || lane == 15) {
-            treesAndGolds.add(new CoinGold(lane1V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeTwo(lane2V, new Vector2(0, -speed)));
-            treesAndGolds.add(new TreeOne(lane3V, new Vector2(0, -speed)));
-            treesAndGolds.add(new CoinGold(lane4V, new Vector2(0, -speed)));
-
+        if (r < bothProb) {
+            // هر دو طرف آیتم داشته باشند
+            spawnLeft = true;
+            spawnRight = true;
+        } else {
+            // فقط یک طرف (یا چپ یا راست)
+            if (MathUtils.randomBoolean()) {
+                spawnLeft = true;
+            } else {
+                spawnRight = true;
+            }
         }
 
+        float baseOffset = baseItemHeight * MathUtils.random(0.4f, 1.1f);
+        boolean anyItem = false;
+
+        // --- جادهٔ چپ: لاین‌های ۰ و ۱ → TreeOne ---
+        if (spawnLeft) {
+            int laneIndex = MathUtils.randomBoolean() ? 0 : 1;
+            Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
+            float localOffset = baseOffset + baseItemHeight * MathUtils.random(-0.2f, 0.3f);
+            spawnPos.y += localOffset;
+
+            items.add(new TreeOne(spawnPos, new Vector2(0, -speed)));
+            anyItem = true;
+        }
+
+        // --- جادهٔ راست: لاین‌های ۲ و ۳ → TreeTwo ---
+        if (spawnRight) {
+            int laneIndex = MathUtils.randomBoolean() ? 2 : 3;
+            Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
+            float rightOffset = baseOffset + baseItemHeight * MathUtils.random(0.0f, 0.6f);
+            spawnPos.y += rightOffset;
+
+            items.add(new TreeTwo(spawnPos, new Vector2(0, -speed)));
+            anyItem = true;
+        }
+
+        // اگر به هر دلیلی آیتمی ساخته نشد، یکی بسازیم که بازی خالی نشود
+        if (!anyItem) {
+            boolean leftSide = MathUtils.randomBoolean();
+            if (leftSide) {
+                int laneIndex = MathUtils.randomBoolean() ? 0 : 1;
+                Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
+                spawnPos.y += baseItemHeight * 0.7f;
+                items.add(new TreeOne(spawnPos, new Vector2(0, -speed)));
+            } else {
+                int laneIndex = MathUtils.randomBoolean() ? 2 : 3;
+                Vector2 spawnPos = lanePositions.get(laneIndex).cpy();
+                spawnPos.y += baseItemHeight * 0.7f;
+                items.add(new TreeTwo(spawnPos, new Vector2(0, -speed)));
+            }
+        }
     }
 
-    private void checkCollisions() {
+    /** hitbox را کوچیک‌تر از کل تکسچر می‌کنیم تا برخورد طبیعی‌تر بشود */
+    private Rectangle scaledRect(Rectangle r, float scaleX, float scaleY) {
+        float newW = r.width * scaleX;
+        float newH = r.height * scaleY;
+        float newX = r.x + (r.width - newW) / 2f;
+        float newY = r.y + (r.height - newH) / 2f;
+        return new Rectangle(newX, newY, newW, newH);
+    }
 
-        for (Entity e : treesAndGolds) {
+    /**
+     * منطق آیتم‌ها:
+     * - اگر ماشین‌ها به TreeOne / TreeTwo بخورند → امتیاز + صدا + حذف آیتم
+     * - اگر آیتم از پایین صفحه رد شود بدون این‌که گرفته شود → gameOver
+     */
+    private void checkItemLogic() {
 
-            if (carOne.getBounds().contains(e.getBounds()) || carTwo.getBounds().contains(e.getBounds())) {
+        // hitbox کوچک‌شدهٔ ماشین‌ها
+        Rectangle car1Box = scaledRect(carOne.getBounds(), HITBOX_SCALE_X, HITBOX_SCALE_Y);
+        Rectangle car2Box = scaledRect(carTwo.getBounds(), HITBOX_SCALE_X, HITBOX_SCALE_Y);
 
-                if (e instanceof TreeOne || e instanceof TreeTwo) {
+        for (int i = 0; i < items.size; i++) {
+            Entity e = items.get(i);
 
-                    if (!MainGame.debug) {
-                        MainGame.gameOver = true;
-                    }
-                    e.pos.y = -300;
+            if (!(e instanceof TreeOne) && !(e instanceof TreeTwo)) {
+                continue;
+            }
 
-                } else if (e instanceof CoinGold) {
+            Rectangle itemBox = scaledRect(e.getBounds(), HITBOX_SCALE_X, HITBOX_SCALE_Y);
 
-                    MainGame.scoreCurrent++;
-                    coinGoldSound.play();
-                    goldEffect.setPosition(e.pos.x, e.pos.y);
-                    goldEffect.start();
+            boolean collected = car1Box.overlaps(itemBox) || car2Box.overlaps(itemBox);
 
-                    e.pos.y = -300;
+            if (collected) {
+                MainGame.scoreCurrent++;
+                // اگر صدا اذیت می‌کند، این خط را کامنت کن
+                // collectSound.play(0.7f);
 
-                    if (MainGame.scoreCurrent > 9998) {
-                        MainGame.gameOver = true;
-                        MainGame.gameWin = true;
-                    }
+                items.removeIndex(i);
+                i--;
+
+                if (MainGame.scoreCurrent > 9998) {
+                    MainGame.gameOver = true;
+                    MainGame.gameWin = true;
                 }
+                continue;
             }
 
+            // اگر آیتم کامل از پایین صفحه رد شود و هنوز گرفته نشده → باخت
+            if (e.pos.y + baseItemHeight < 0) {
+                if (!MainGame.debug) {
+                    MainGame.gameOver = true;
+                }
+                items.removeIndex(i);
+                i--;
+            }
         }
-
     }
 
-
+    /** پاک‌سازی چیزهای خیلی دور از صفحه (صرفاً برای تمیز بودن حافظه) */
     public void removeUnUsedEntities() {
-
-        int index = 0;
-        for (Entity e : treesAndGolds) {
-            if (e == null) {
-                treesAndGolds.removeIndex(index);
-            } else if (e.pos.y < -200) {
-                treesAndGolds.removeIndex(index);
+        for (int i = items.size - 1; i >= 0; i--) {
+            Entity e = items.get(i);
+            if (e == null || e.pos.y < -baseItemHeight * 2f) {
+                items.removeIndex(i);
             }
-            index++;
         }
-
     }
-
 
     public boolean isGameOver() {
-        return gameOver;
+        return gameOver || MainGame.gameOver;
     }
-
 }

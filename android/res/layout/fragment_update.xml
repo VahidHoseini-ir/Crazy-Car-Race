@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient">
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical">
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layoutDirection="rtl"
+        android:orientation="horizontal"
+        android:paddingTop="12dp">
+
+        <ImageView
+          android:layout_width="52dp"
+          android:layout_height="52dp"
+          android:padding="8dp"
+          android:src="@drawable/ic_new"
+          app:tint="#FFC107" />
+
+        <TextView
+          android:id="@+id/txtTitle"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:fontFamily="@font/vazirlight"
+          android:text="آپدیت جدید اپلیکیشن منتشر شد!"
+          android:textColor="#FFFFFF"
+          android:textSize="19dp"
+          android:textStyle="bold" />
+
+      </LinearLayout>
+
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="2px"
+        android:layout_margin="12dp"
+        android:background="#dedede" />
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layoutDirection="rtl"
+        android:orientation="horizontal"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="12dp"
+        android:weightSum="5">
+
+
+        <Button
+          android:id="@+id/btnConfirm"
+          android:layout_width="0dip"
+          android:layout_height="62dp"
+          android:layout_weight="3"
+          android:backgroundTint="#FDBF07"
+          android:fontFamily="@font/vazirlight"
+          android:text="به روزرسانی"
+          android:textColor="#EDE7F6"
+          android:textSize="19sp"
+          android:textStyle="bold"
+           />
+
+
+        <Button
+          android:id="@+id/btnRefuse"
+          android:layout_width="0dip"
+          android:layout_height="62dp"
+          android:layout_marginRight="12dp"
+          android:layout_weight="2"
+          android:backgroundTint="#FFFFFF"
+          android:fontFamily="@font/vazirlight"
+          android:text="خیر"
+          android:textColor="#C03702"
+          android:textSize="19sp"
+          android:textStyle="bold"
+          />
+
+      </LinearLayout>
+
+
+      <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp">
+
+        <TextView
+          android:id="@+id/txtDesc"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:fontFamily="@font/vazirlight"
+          android:lineSpacingExtra="10dp"
+          android:paddingTop="16dp"
+          android:text=" برای استفاده از امکانات جدید، لازم است اپلیکیشنتان را به روزرسانی کنید. \n
+         \n✨ ویژگی‌های جدید: \n
+✅ بهبود عملکرد و سرعت اپلیکیشن\n
+✅ رفع باگ‌های گزارش‌شده توسط کاربران\n
+✅ افزودن قابلیت‌های جدید و جذاب
+\n
+
+🔄 لطفاً برای تجربه بهتر، اپلیکیشن خود را به نسخه جدید بروزرسانی کنید.
+\n
+    "
+          android:textColor="#FFFFFF"
+          android:textSize="17sp"
+          android:textStyle="bold" />
+
+      </ScrollView>
+
+
+    </LinearLayout>
+  </LinearLayout>
+</LinearLayout>

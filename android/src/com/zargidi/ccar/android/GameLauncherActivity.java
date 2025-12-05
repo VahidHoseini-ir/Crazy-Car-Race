@@ -47,6 +47,7 @@ public class GameLauncherActivity extends AndroidApplication implements MainGame
 
         Intent intent = new Intent(this, GameOverActivity.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_up, R.anim.fade_out_soft);
     }
 
     @Override
@@ -58,5 +59,6 @@ public class GameLauncherActivity extends AndroidApplication implements MainGame
     public void onBackPressed() {
         Intent intent = new Intent(this, MainMenuActivity.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_up, R.anim.fade_out_soft);
     }
 }
