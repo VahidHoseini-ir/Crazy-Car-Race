@@ -10,9 +10,10 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 
+import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
 import com.zargidi.ccar.MainGame;
 
-public class MainActivity extends Activity implements NavigationHost, MainMenuFragment.MenuActions, GameOverFragment.GameOverActions, MainGame.MyGameCallback {
+public class MainActivity extends Activity implements NavigationHost, MainMenuFragment.MenuActions, GameOverFragment.GameOverActions, MainGame.MyGameCallback, AndroidFragmentApplication.Callbacks {
 
     private static final String PREF_SCORE = "userScore";
     private static final String KEY_GAME_WIN = "gameWin";
@@ -64,6 +65,11 @@ public class MainActivity extends Activity implements NavigationHost, MainMenuFr
     @Override
     public void onOpenStore(Uri uri) {
         onOpenUrl(uri);
+    }
+
+    @Override
+    public void exit() {
+        finish();
     }
 
     @Override
