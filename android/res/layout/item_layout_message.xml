@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:layoutDirection="ltr"
+  android:orientation="vertical">
+
+  <LinearLayout
+    android:id="@+id/root_element"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <ImageView
+      android:id="@+id/UnreadView"
+      android:layout_width="10dp"
+      android:layout_height="10dp"
+      android:src="@drawable/ic_circle_24"
+      android:tint="#2979FF" />
+
+
+
+    <TextView
+      android:id="@+id/txttitle"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:fontFamily="@font/vazirlight"
+      android:text="10 پکیج لوازم خودرو ویژه برندگان مسابقه"
+      android:textColor="#261F1F"
+      android:textSize="18sp"
+      android:textStyle="bold" />
+    <TextView
+      android:id="@+id/txtMessage"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="12dp"
+      android:fontFamily="@font/vazirlight"
+
+      android:maxLines="2"
+      android:text="..."
+      android:textColor="#261F1F" />
+
+
+  </LinearLayout>
+
+  <LinearLayout
+    android:id="@+id/actions"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:layout_marginBottom="12dp"
+    android:gravity="right"
+    android:layoutDirection="rtl"
+    android:visibility="gone">
+
+    <TextView
+      android:id="@+id/action1"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="2dp"
+      android:clickable="true"
+      android:fontFamily="@font/vazirlight"
+      android:paddingLeft="12dp"
+      android:paddingRight="12dp"
+      android:text="مشاهده جزئیات"
+      android:textColor="#2979FF"
+      android:textStyle="bold"
+      android:visibility="gone" />
+
+    <TextView
+      android:id="@+id/action2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="2dp"
+      android:clickable="true"
+      android:fontFamily="@font/vazirlight"
+      android:paddingLeft="12dp"
+      android:paddingRight="12dp"
+      android:text="مشاهده نتیجه"
+      android:textColor="#2979FF"
+      android:textStyle="bold"
+      android:visibility="gone" />
+  </LinearLayout>
+
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="2dp"
+    android:background="#cecece" />
+</LinearLayout>

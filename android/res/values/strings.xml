@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Crazy Car Race</string>
+    <string name="app_name">CarTwin</string>
     <string name="title_activity_splash_screen">Splash Screen</string>
-    <string name="main_menu_title">Twin Road Riders</string>
+    <string name="main_menu_title">CAR TWIN</string>
     <string name="copy_right">2025 VSION PRO Games</string>
     <string name="game_over_title">TRY AGAIN</string>
     <string name="score_current_title">SCORE</string>

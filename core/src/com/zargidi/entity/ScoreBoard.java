@@ -1,6 +1,7 @@
 package com.zargidi.entity;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -64,12 +65,20 @@ public class ScoreBoard extends Entity {
         rebuildBackground();
     }
 
+    private static final String PREF_NAME   = "userScore";
+    private static final String KEY_SCORE   = "scoreCurrent";
+
     @Override
     public void update() {
         pos.add(direction);
 
         int score = (MainGame.scoreCurrent != null) ? MainGame.scoreCurrent : 0;
         int best  = (MainGame.scoreHigh    != null) ? MainGame.scoreHigh    : 0;
+
+        Preferences prefs = Gdx.app.getPreferences(PREF_NAME);
+        prefs.putInteger(KEY_SCORE, score);
+        prefs.flush();
+
 
         if (score != lastScore || best != lastBest || screenSizeChanged()) {
             lastScore = score;

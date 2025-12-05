@@ -1,0 +1,89 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:id="@+id/rootBanner"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="#AA000000"
+  android:orientation="vertical"
+  android:padding="0dp">
+
+  <LinearLayout
+    android:id="@+id/btnClose"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="right"
+    android:gravity="center"
+    android:clickable="true"
+    android:focusable="true"
+    android:layout_margin="12dp">
+
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="بستن"
+      android:fontFamily="@font/vazirlight"
+      android:textStyle="bold"
+      android:layout_marginRight="8dp"
+      android:layout_marginLeft="8dp"
+      android:textColor="#E8EAF6"
+      />
+
+    <ImageView
+      android:layout_width="42dp"
+      android:layout_height="42dp"
+      android:padding="8dp"
+      android:tint="#EDE7F6"
+      android:contentDescription="close button"
+      android:src="@android:drawable/ic_menu_close_clear_cancel" />
+
+
+
+  </LinearLayout>
+
+
+  <!-- دکمه بستن -->
+  <LinearLayout
+    android:id="@+id/bannerContent"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_centerInParent="true"
+    android:layout_weight="1"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <!-- تصویر بنر -->
+    <ImageView
+      android:id="@+id/imgBanner"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginLeft="12dp"
+      android:layout_marginRight="12dp"
+      android:adjustViewBounds="true"
+      android:scaleType="fitXY" />
+
+  </LinearLayout>
+
+  <!-- Indicator ها در پایین صفحه -->
+  <LinearLayout
+    android:id="@+id/indicatorContainer"
+    android:layout_width="wrap_content"
+    android:layout_height="32dp"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true"
+    android:layout_gravity="center"
+    android:layout_marginBottom="50dp"
+    android:gravity="center"
+    android:orientation="horizontal" />
+
+  <!-- Progressbar پایین صفحه -->
+  <ProgressBar
+    android:id="@+id/bannerProgress"
+    style="?android:attr/progressBarStyleHorizontal"
+    android:layout_width="match_parent"
+    android:layout_height="6dp"
+    android:layout_alignParentBottom="true"
+    android:max="3500"
+    android:progressBackgroundTint="@android:color/darker_gray"
+    android:progressTint="@android:color/white" />
+
+</LinearLayout>

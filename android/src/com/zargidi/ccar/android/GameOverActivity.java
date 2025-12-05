@@ -13,6 +13,8 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.zargidi.ccar.MainGame;
+
 import java.util.Random;
 
 public class GameOverActivity extends Activity {
