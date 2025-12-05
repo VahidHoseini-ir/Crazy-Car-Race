@@ -54,7 +54,7 @@ dependencies {
     implementation project(':core')
     implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-//    implementation 'androidx.fragment:fragment:1.6.1'   // ← این مهم است
+    implementation 'androidx.fragment:fragment:1.8.4'
 
 
 

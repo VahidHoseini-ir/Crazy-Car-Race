@@ -118,7 +118,6 @@
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
         android:background="@drawable/button_replay"
-        android:onClick="menuButtonClicked"
         android:scaleType="centerInside" />
 
     </LinearLayout>
@@ -139,7 +138,6 @@
         android:layout_margin="5dp"
 
         android:background="@drawable/button_back_to_level"
-        android:onClick="menuButtonClicked"
         android:scaleType="centerInside" />
 
       <ImageView
@@ -148,7 +146,6 @@
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
         android:background="@drawable/star"
-        android:onClick="menuButtonClicked"
         android:scaleType="centerInside" />
 
       <ImageView
@@ -157,7 +154,6 @@
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
         android:background="@drawable/love"
-        android:onClick="menuButtonClicked"
         android:scaleType="centerInside" />
 
     </LinearLayout>

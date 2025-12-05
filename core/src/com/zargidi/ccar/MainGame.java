@@ -14,6 +14,8 @@ public class MainGame extends ApplicationAdapter {
     public static Boolean gameOver = false;
     public static Boolean gameWin  = false;
 
+    private boolean gameOverHandled = false;
+
     public static Integer scoreCurrent = 0;
     public static Integer scoreHigh    = 0;
 
@@ -54,7 +56,7 @@ public class MainGame extends ApplicationAdapter {
             ScreenManager.getCurrentScreen().render(batch);
         }
 
-        if (gameOver) {
+        if (gameOver && !gameOverHandled) {
 
             // اگر رکورد جدید زدیم، ذخیره کن
             if (scoreCurrent > scoreHigh) {
@@ -72,7 +74,9 @@ public class MainGame extends ApplicationAdapter {
 
             ScreenManager.clearScreen();
             dispose();
-            Gdx.app.exit();
+
+            gameOverHandled = true;
+            gameOver = false;
         }
     }
 
