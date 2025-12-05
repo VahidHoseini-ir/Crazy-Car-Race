@@ -24,6 +24,8 @@ public class MainGame extends ApplicationAdapter {
     public static boolean debug = false;
     public static int level = 1;
 
+    private boolean disposed = false;
+
     // اسم و کلید برای Preferences (همین‌ها را در Activity اندروید هم استفاده کن)
     private static final String PREF_NAME   = "userScore";
     private static final String KEY_BEST    = "scoreHigh";
@@ -103,9 +105,15 @@ public class MainGame extends ApplicationAdapter {
 
     @Override
     public void dispose() {
-        if (batch != null) batch.dispose();
+        if (disposed) return;
+        disposed = true;
+
         if (ScreenManager.getCurrentScreen() != null) {
             ScreenManager.getCurrentScreen().dispose();
+        }
+        if (batch != null) {
+            batch.dispose();
+            batch = null;
         }
     }
 
