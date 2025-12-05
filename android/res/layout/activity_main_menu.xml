@@ -56,7 +56,6 @@
 
         android:layout_margin="20dp"
         android:background="@drawable/button_play"
-        android:onClick="menuButtonClicked"
         android:src="@drawable/button_play" />
 
     </LinearLayout>
@@ -75,8 +74,7 @@
         android:layout_height="wrap_content"
 
         android:layout_margin="5dp"
-        android:background="@drawable/button_how_to"
-        android:onClick="menuButtonClicked" />
+        android:background="@drawable/button_how_to" />
 
       <ImageView
         android:id="@+id/buttonPlayMarketStar"
@@ -84,8 +82,7 @@
         android:layout_height="wrap_content"
 
         android:layout_margin="5dp"
-        android:background="@drawable/star"
-        android:onClick="menuButtonClicked" />
+        android:background="@drawable/star" />
 
       <ImageView
         android:id="@+id/buttonPlayMarketHeart"
@@ -93,8 +90,7 @@
         android:layout_height="wrap_content"
 
         android:layout_margin="5dp"
-        android:background="@drawable/love"
-        android:onClick="menuButtonClicked" />
+        android:background="@drawable/love" />
 
     </LinearLayout>
 
