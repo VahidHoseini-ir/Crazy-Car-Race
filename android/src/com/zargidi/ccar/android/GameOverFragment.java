@@ -80,28 +80,28 @@ public class GameOverFragment extends Fragment {
     }
 
     private void backToLevel() {
-        GameOverActions host = getHost();
+        GameOverActions host = getGameOverActionsHost();
         if (host != null) {
             host.onBackToMenuRequested();
         }
     }
 
     private void replayGame() {
-        GameOverActions host = getHost();
+        GameOverActions host = getGameOverActionsHost();
         if (host != null) {
             host.onReplayRequested();
         }
     }
 
     private void openStore(String url) {
-        GameOverActions host = getHost();
+        GameOverActions host = getGameOverActionsHost();
         if (host != null) {
             host.onOpenStore(Uri.parse(url));
         }
     }
 
     @Nullable
-    private GameOverActions getHost() {
+    private GameOverActions getGameOverActionsHost() {
         if (getActivity() instanceof GameOverActions) {
             return (GameOverActions) getActivity();
         }
